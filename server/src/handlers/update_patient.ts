@@ -1,15 +1,55 @@
+import { db } from '../db';
+import { patientsTable } from '../db/schema';
 import { type UpdatePatientInput, type Patient } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export async function updatePatient(input: UpdatePatientInput): Promise<Patient | null> {
-  // This is a placeholder declaration! Real code should be implemented here.
-  // The goal of this handler is updating an existing patient in the database.
-  // It should update the patient record with the provided ID and return the updated record.
-  // Should validate that CNIC and phone remain unique if being updated.
-  return Promise.resolve({
-    id: input.id,
-    patientId: "P001", // patientId should not be updatable
-    cnic: input.cnic !== undefined ? input.cnic : "12345-1234567-1",
-    phone: input.phone !== undefined ? input.phone : "+92-300-1234567",
-    name: input.name !== undefined ? input.name : "Placeholder Patient",
-  } as Patient);
+  try {
+    // Check if patient exists
+    const existingPatient = await db.select()
+      .from(patientsTable)
+      .where(eq(patientsTable.id, input.id))
+      .limit(1)
+      .execute();
+
+    if (existingPatient.length === 0) {
+      return null;
+    }
+
+    // Build update object with only provided fields
+    const updateData: Partial<{
+      cnic: string | null;
+      phone: string | null;
+      name: string | null;
+    }> = {};
+    
+    if (input.cnic !== undefined) {
+      updateData.cnic = input.cnic;
+    }
+    
+    if (input.phone !== undefined) {
+      updateData.phone = input.phone;
+    }
+    
+    if (input.name !== undefined) {
+      updateData.name = input.name;
+    }
+
+    // If no fields to update, return existing patient
+    if (Object.keys(updateData).length === 0) {
+      return existingPatient[0];
+    }
+
+    // Update patient record
+    const result = await db.update(patientsTable)
+      .set(updateData)
+      .where(eq(patientsTable.id, input.id))
+      .returning()
+      .execute();
+
+    return result[0] || null;
+  } catch (error) {
+    console.error('Patient update failed:', error);
+    throw error;
+  }
 }

@@ -1,8 +1,20 @@
+import { db } from '../db';
+import { visitsTable } from '../db/schema';
 import { type Visit } from '../schema';
 
 export async function getVisits(): Promise<Visit[]> {
-  // This is a placeholder declaration! Real code should be implemented here.
-  // The goal of this handler is fetching all visits from the database.
-  // It should return all records from the visits table with patient and doctor information.
-  return [];
+  try {
+    const results = await db.select()
+      .from(visitsTable)
+      .execute();
+
+    return results.map(visit => ({
+      ...visit,
+      visitDate: visit.visitDate,
+      followUpDate: visit.followUpDate,
+    }));
+  } catch (error) {
+    console.error('Failed to fetch visits:', error);
+    throw error;
+  }
 }

@@ -1,14 +1,30 @@
+import { db } from '../db';
+import { patientsTable } from '../db/schema';
+import { eq } from 'drizzle-orm';
 import { type GetByIdInput, type Patient } from '../schema';
 
 export async function getPatientById(input: GetByIdInput): Promise<Patient | null> {
-  // This is a placeholder declaration! Real code should be implemented here.
-  // The goal of this handler is fetching a specific patient by their ID from the database.
-  // It should return a single patient record or null if not found.
-  return Promise.resolve({
-    id: input.id,
-    patientId: "P001",
-    cnic: "12345-1234567-1",
-    phone: "+92-300-1234567",
-    name: "Placeholder Patient",
-  } as Patient);
+  try {
+    const results = await db.select()
+      .from(patientsTable)
+      .where(eq(patientsTable.id, input.id))
+      .limit(1)
+      .execute();
+
+    if (results.length === 0) {
+      return null;
+    }
+
+    const patient = results[0];
+    return {
+      id: patient.id,
+      patientId: patient.patientId,
+      cnic: patient.cnic,
+      phone: patient.phone,
+      name: patient.name,
+    };
+  } catch (error) {
+    console.error('Failed to get patient by ID:', error);
+    throw error;
+  }
 }

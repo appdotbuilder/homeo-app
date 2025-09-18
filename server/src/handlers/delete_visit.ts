@@ -1,8 +1,22 @@
+import { db } from '../db';
+import { visitsTable } from '../db/schema';
 import { type GetByIdInput } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export async function deleteVisit(input: GetByIdInput): Promise<{ success: boolean }> {
-  // This is a placeholder declaration! Real code should be implemented here.
-  // The goal of this handler is deleting a visit record from the database.
-  // It should remove the visit record with the provided ID and return success status.
-  return Promise.resolve({ success: true });
+  try {
+    // Delete the visit record
+    const result = await db.delete(visitsTable)
+      .where(eq(visitsTable.id, input.id))
+      .returning()
+      .execute();
+
+    // Check if any record was actually deleted
+    const success = result.length > 0;
+    
+    return { success };
+  } catch (error) {
+    console.error('Visit deletion failed:', error);
+    throw error;
+  }
 }

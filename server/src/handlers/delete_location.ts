@@ -1,9 +1,38 @@
+import { db } from '../db';
+import { locationsTable, doctorsTable } from '../db/schema';
 import { type GetByIdInput } from '../schema';
+import { eq, count } from 'drizzle-orm';
 
 export async function deleteLocation(input: GetByIdInput): Promise<{ success: boolean }> {
-  // This is a placeholder declaration! Real code should be implemented here.
-  // The goal of this handler is deleting a location from the database.
-  // It should remove the location record with the provided ID and return success status.
-  // Note: Should check for existing doctors at this location before allowing deletion.
-  return Promise.resolve({ success: true });
+  try {
+    // First, check if the location exists
+    const existingLocation = await db.select()
+      .from(locationsTable)
+      .where(eq(locationsTable.id, input.id))
+      .execute();
+
+    if (existingLocation.length === 0) {
+      throw new Error(`Location with ID ${input.id} not found`);
+    }
+
+    // Check if there are any doctors associated with this location
+    const doctorCount = await db.select({ count: count() })
+      .from(doctorsTable)
+      .where(eq(doctorsTable.locationId, input.id))
+      .execute();
+
+    if (doctorCount[0].count > 0) {
+      throw new Error(`Cannot delete location. There are ${doctorCount[0].count} doctor(s) associated with this location`);
+    }
+
+    // Delete the location
+    await db.delete(locationsTable)
+      .where(eq(locationsTable.id, input.id))
+      .execute();
+
+    return { success: true };
+  } catch (error) {
+    console.error('Location deletion failed:', error);
+    throw error;
+  }
 }
