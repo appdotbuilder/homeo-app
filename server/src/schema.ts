@@ -155,3 +155,18 @@ export const getDoctorsByLocationInputSchema = z.object({
 });
 
 export type GetDoctorsByLocationInput = z.infer<typeof getDoctorsByLocationInputSchema>;
+
+// Login schemas
+export const loginInputSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+export type LoginInput = z.infer<typeof loginInputSchema>;
+
+export const loginResponseSchema = z.object({
+  role: z.enum(['superadmin', 'doctor']),
+  doctor: doctorSchema.optional(),
+});
+
+export type LoginResponse = z.infer<typeof loginResponseSchema>;

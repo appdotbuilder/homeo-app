@@ -17,7 +17,8 @@ import {
   updateVisitInputSchema,
   getByIdInputSchema,
   getVisitsByPatientInputSchema,
-  getDoctorsByLocationInputSchema
+  getDoctorsByLocationInputSchema,
+  loginInputSchema
 } from './schema';
 
 // Import handlers
@@ -47,6 +48,8 @@ import { getVisitsByPatient } from './handlers/get_visits_by_patient';
 import { updateVisit } from './handlers/update_visit';
 import { deleteVisit } from './handlers/delete_visit';
 
+import { login } from './handlers/login';
+
 const t = initTRPC.create({
   transformer: superjson,
 });
@@ -58,6 +61,11 @@ const appRouter = router({
   healthcheck: publicProcedure.query(() => {
     return { status: 'ok', timestamp: new Date().toISOString() };
   }),
+
+  // Authentication
+  login: publicProcedure
+    .input(loginInputSchema)
+    .mutation(({ input }) => login(input)),
 
   // Location routes (Superadmin functions)
   createLocation: publicProcedure

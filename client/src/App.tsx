@@ -1,23 +1,28 @@
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { SuperadminDashboard } from '@/components/SuperadminDashboard';
 import { DoctorDashboard } from '@/components/DoctorDashboard';
 import { DoctorSelectionScreen } from '@/components/DoctorSelectionScreen';
+import { LoginScreen } from '@/components/LoginScreen';
 import type { Doctor } from '../../server/src/schema';
 
-type UserRole = 'superadmin' | 'doctor' | null;
-
 function App() {
-  const [currentRole, setCurrentRole] = useState<UserRole>(null);
-  const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<'superadmin' | 'doctor' | null>(null);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
 
-  const handleRoleSwitch = (role: UserRole) => {
-    setCurrentRole(role);
-    setSelectedDoctorId(null);
+  const handleLoginSuccess = (role: 'superadmin' | 'doctor', doctor?: Doctor) => {
+    setIsLoggedIn(true);
+    setUserRole(role);
+    if (role === 'doctor' && doctor) {
+      setSelectedDoctor(doctor);
+    }
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUserRole(null);
     setSelectedDoctor(null);
   };
 
@@ -29,42 +34,9 @@ function App() {
     setSelectedDoctor(null);
   };
 
-  if (!currentRole) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-green-800">🏥 HomeoClinic</CardTitle>
-            <CardDescription>
-              Complete management system for homeopathic clinics
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-center text-sm text-gray-600 mb-6">
-              Select your role to continue
-            </div>
-            <div className="space-y-3">
-              <Button 
-                onClick={() => handleRoleSwitch('superadmin')}
-                className="w-full bg-blue-600 hover:bg-blue-700"
-                size="lg"
-              >
-                👨‍💼 Superadmin
-                <div className="text-xs opacity-90 ml-2">Manage doctors & locations</div>
-              </Button>
-              <Button 
-                onClick={() => handleRoleSwitch('doctor')}
-                className="w-full bg-green-600 hover:bg-green-700"
-                size="lg"
-              >
-                👩‍⚕️ Doctor
-                <div className="text-xs opacity-90 ml-2">Manage patients & visits</div>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  // Show login screen if not logged in
+  if (!isLoggedIn) {
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
   }
 
   return (
@@ -75,19 +47,19 @@ function App() {
             <div className="flex items-center space-x-3">
               <h1 className="text-2xl font-bold text-green-800">🏥 HomeoClinic</h1>
               <Badge 
-                variant={currentRole === 'superadmin' ? 'default' : 'secondary'} 
-                className={currentRole === 'superadmin' ? 'bg-blue-600' : 'bg-green-600'}
+                variant={userRole === 'superadmin' ? 'default' : 'secondary'} 
+                className={userRole === 'superadmin' ? 'bg-blue-600' : 'bg-green-600'}
               >
-                {currentRole === 'superadmin' ? '👨‍💼 Superadmin' : '👩‍⚕️ Doctor'}
+                {userRole === 'superadmin' ? '👨‍💼 Superadmin' : '👩‍⚕️ Doctor'}
               </Badge>
-              {currentRole === 'doctor' && selectedDoctor && (
+              {userRole === 'doctor' && selectedDoctor && (
                 <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700">
                   Dr. {selectedDoctor.name}
                 </Badge>
               )}
             </div>
             <div className="flex items-center space-x-2">
-              {currentRole === 'doctor' && selectedDoctor && (
+              {userRole === 'doctor' && selectedDoctor && (
                 <Button 
                   variant="outline" 
                   onClick={handleChangeDoctorProfile}
@@ -99,10 +71,10 @@ function App() {
               )}
               <Button 
                 variant="outline" 
-                onClick={() => handleRoleSwitch(null)}
+                onClick={handleLogout}
                 className="hover:bg-red-50 hover:border-red-200 hover:text-red-700"
               >
-                Switch Role
+                Logout
               </Button>
             </div>
           </div>
@@ -110,16 +82,16 @@ function App() {
       </header>
 
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        {currentRole === 'superadmin' && (
+        {userRole === 'superadmin' && (
           <SuperadminDashboard 
-            onDoctorSelect={setSelectedDoctorId}
-            selectedDoctorId={selectedDoctorId}
+            onDoctorSelect={() => {}} // Superadmin doesn't need doctor selection
+            selectedDoctorId={null}
           />
         )}
-        {currentRole === 'doctor' && !selectedDoctor && (
+        {userRole === 'doctor' && !selectedDoctor && (
           <DoctorSelectionScreen onDoctorSelect={handleDoctorSelect} />
         )}
-        {currentRole === 'doctor' && selectedDoctor && (
+        {userRole === 'doctor' && selectedDoctor && (
           <DoctorDashboard selectedDoctor={selectedDoctor} />
         )}
       </main>
