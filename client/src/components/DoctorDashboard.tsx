@@ -5,9 +5,13 @@ import { PatientRegistration } from '@/components/PatientRegistration';
 import { PatientHistory } from '@/components/PatientHistory';
 import { VisitRecords } from '@/components/VisitRecords';
 import { useState } from 'react';
-import type { Patient } from '../../../server/src/schema';
+import type { Patient, Doctor } from '../../../server/src/schema';
 
-export function DoctorDashboard() {
+interface DoctorDashboardProps {
+  selectedDoctor: Doctor;
+}
+
+export function DoctorDashboard({ selectedDoctor }: DoctorDashboardProps) {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [activeTab, setActiveTab] = useState('search');
 
@@ -25,7 +29,12 @@ export function DoctorDashboard() {
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-3xl font-bold text-gray-900">Doctor Dashboard</h2>
-        <p className="text-gray-600 mt-2">Manage patient records and visit history</p>
+        <p className="text-gray-600 mt-2">
+          Welcome, Dr. {selectedDoctor.name} • {selectedDoctor.timings}
+        </p>
+        <p className="text-sm text-gray-500 mt-1">
+          Manage patient records and visit history
+        </p>
       </div>
 
       {selectedPatient && (
@@ -81,7 +90,7 @@ export function DoctorDashboard() {
         </TabsContent>
 
         <TabsContent value="visits" className="space-y-4">
-          {selectedPatient && <VisitRecords patient={selectedPatient} />}
+          {selectedPatient && <VisitRecords patient={selectedPatient} activeDoctor={selectedDoctor} />}
         </TabsContent>
       </Tabs>
     </div>

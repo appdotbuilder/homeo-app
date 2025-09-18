@@ -5,16 +5,28 @@ import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { SuperadminDashboard } from '@/components/SuperadminDashboard';
 import { DoctorDashboard } from '@/components/DoctorDashboard';
+import { DoctorSelectionScreen } from '@/components/DoctorSelectionScreen';
+import type { Doctor } from '../../server/src/schema';
 
 type UserRole = 'superadmin' | 'doctor' | null;
 
 function App() {
   const [currentRole, setCurrentRole] = useState<UserRole>(null);
   const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
 
   const handleRoleSwitch = (role: UserRole) => {
     setCurrentRole(role);
     setSelectedDoctorId(null);
+    setSelectedDoctor(null);
+  };
+
+  const handleDoctorSelect = (doctor: Doctor) => {
+    setSelectedDoctor(doctor);
+  };
+
+  const handleChangeDoctorProfile = () => {
+    setSelectedDoctor(null);
   };
 
   if (!currentRole) {
@@ -68,14 +80,31 @@ function App() {
               >
                 {currentRole === 'superadmin' ? '👨‍💼 Superadmin' : '👩‍⚕️ Doctor'}
               </Badge>
+              {currentRole === 'doctor' && selectedDoctor && (
+                <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700">
+                  Dr. {selectedDoctor.name}
+                </Badge>
+              )}
             </div>
-            <Button 
-              variant="outline" 
-              onClick={() => handleRoleSwitch(null)}
-              className="hover:bg-red-50 hover:border-red-200 hover:text-red-700"
-            >
-              Switch Role
-            </Button>
+            <div className="flex items-center space-x-2">
+              {currentRole === 'doctor' && selectedDoctor && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleChangeDoctorProfile}
+                  className="hover:bg-green-50 hover:border-green-200"
+                  size="sm"
+                >
+                  Change Doctor
+                </Button>
+              )}
+              <Button 
+                variant="outline" 
+                onClick={() => handleRoleSwitch(null)}
+                className="hover:bg-red-50 hover:border-red-200 hover:text-red-700"
+              >
+                Switch Role
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -87,7 +116,12 @@ function App() {
             selectedDoctorId={selectedDoctorId}
           />
         )}
-        {currentRole === 'doctor' && <DoctorDashboard />}
+        {currentRole === 'doctor' && !selectedDoctor && (
+          <DoctorSelectionScreen onDoctorSelect={handleDoctorSelect} />
+        )}
+        {currentRole === 'doctor' && selectedDoctor && (
+          <DoctorDashboard selectedDoctor={selectedDoctor} />
+        )}
       </main>
     </div>
   );
